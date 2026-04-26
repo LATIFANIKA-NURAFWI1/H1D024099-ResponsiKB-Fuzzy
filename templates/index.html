@@ -8,6 +8,24 @@
 </head>
 <body>
 
+<header class="site-header">
+    <div class="header-inner">
+        <div>
+            <div class="header-title">🎓 Sistem Fuzzy</div>
+            <div class="header-sub">Rekomendasi Prodi &amp; Universitas</div>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="header-nav" id="header-nav">
+            <a href="/" class="nav-link">🎯 Sistem Fuzzy</a>
+            <a href="https://h1d024099-responsi-kb-pakar.vercel.app/" class="nav-link nav-link-pakar" target="_blank" rel="noopener">🔄 Sistem Pakar →</a>
+        </nav>
+    </div>
+</header>
+
 <section class="page-hero">
     <span class="hero-tag">Sistem Fuzzy</span>
     <h1 class="hero-title">Rekomendasi Program Studi &amp;<br>Universitas Terbaik Untukmu</h1>
@@ -15,7 +33,6 @@
 
 <div class="container" style="max-width:900px;">
 
-    <!-- Validasi -->
     {% if errors %}
     <div class="alert-error" id="error-box">
         <strong>⚠️ Wajib Diisi:</strong>
@@ -29,7 +46,6 @@
 
     <form action="/hitung" method="POST" id="mainForm" onsubmit="return validateForm()">
 
-        <!-- BAKAT -->
         <div class="card">
             <div class="card-title">Bakat Kamu</div>
             <p class="section-note">Centang bakat yang dmiliki. Satu orang bisa punya lebih dari satu bakat.</p>
@@ -71,7 +87,6 @@
             <div id="bakat-count" class="sel-count">0 bakat dipilih</div>
         </div>
 
-        <!-- MINAT -->
         <div class="card">
             <div class="card-title">Minat Kamu</div>
             <p class="section-note">Pilih bidang yang diminati.</p>
@@ -88,7 +103,6 @@
             <div id="minat-count" class="sel-count">0 minat dipilih</div>
         </div>
 
-        <!-- NILAI AKADEMIK -->
         <div class="card">
             <div class="card-title">Nilai Rapor Semester 1–5</div>
             <p class="section-note">Masukkan rata-rata nilai semua mata pelajaran per semester (0–100).</p>
@@ -104,7 +118,6 @@
             <div class="avg-box">Rata-rata rapor: <strong id="avg-display">—</strong></div>
         </div>
 
-        <!-- EKONOMI & DOMISILI -->
         <div class="card">
             <div class="card-title">Kondisi Ekonomi &amp; Domisili</div>
             <div class="form-grid">
@@ -149,6 +162,13 @@
 </footer>
 
 <script>
+function toggleMenu() {
+    const nav = document.getElementById('header-nav');
+    const btn = document.getElementById('hamburger');
+    nav.classList.toggle('active');
+    btn.classList.toggle('open');
+}
+
 function highlightRow(rowId, checked) {
     const row = document.getElementById(rowId);
     if (checked) row.classList.add('row-selected');
@@ -198,7 +218,7 @@ updateEkonomiLabel();
 function validateForm() {
     const errorList = document.getElementById('client-error-list');
     const errorBox = document.getElementById('client-error-box');
-    errorList.innerHTML = ''; 
+    errorList.innerHTML = '';
     let errors = [];
 
     if (document.querySelectorAll('input[name="bakat"]:checked').length === 0) {
@@ -234,11 +254,11 @@ function validateForm() {
         });
         errorBox.style.display = 'block';
         errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return false; 
+        return false;
     }
 
     errorBox.style.display = 'none';
-    return true; 
+    return true;
 }
 </script>
 </body>

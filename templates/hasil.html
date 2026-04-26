@@ -8,10 +8,26 @@
 </head>
 <body>
 
+<header class="site-header">
+    <div class="header-inner">
+        <div>
+            <div class="header-title">🎓 Sistem Fuzzy</div>
+            <div class="header-sub">Rekomendasi Prodi &amp; Universitas</div>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="header-nav" id="header-nav">
+            <a href="/" class="nav-link">← Ubah Input</a>
+            <a href="https://h1d024099-responsi-kb-pakar.vercel.app/" class="nav-link nav-link-pakar" target="_blank" rel="noopener">🔄 Sistem Pakar →</a>
+        </nav>
+    </div>
+</header>
 
 <div class="container-wide" style="padding-top:36px;">
 
-    <!-- Rekomendasi Terbaik -->
     {% if hasil %}
     {% set top = hasil[0] %}
     <div class="top-banner">
@@ -20,13 +36,9 @@
             <p>{{ top.prodi.nama_univ }} ({{ top.prodi.univ }}) — Skor: <strong>{{ top.skor }}/100</strong> &nbsp;·&nbsp; {{ top.label }}</p>
             <p style="opacity:0.85; font-size:0.82rem; margin-top:4px;">{{ top.prodi.deskripsi }}</p>
         </div>
-        <nav class="header-nav" id="header-nav">
-            <a href="/" class="nav-link">← Ubah Input</a>
-        </nav>    
     </div>
     {% endif %}
 
-    <!-- PROFIL INPUT -->
     <div class="card">
         <div class="card-title"> Profil Input Kamu</div>
         <div class="profil-row">
@@ -71,9 +83,8 @@
         </div>
     </div>
 
-    <!-- RANKING LIST -->
     <div class="card">
-        <div class="card-title"> Rekomendasi Prodi & Universitas</div>
+        <div class="card-title"> Rekomendasi Prodi &amp; Universitas</div>
         <div class="ranking-list">
             {% for item in hasil %}
             <div class="rank-card rank-{{ loop.index }}">
@@ -120,6 +131,7 @@
 
     <div class="action-bar">
         <a href="/" class="btn btn-outline">← Ubah Input</a>
+        <a href="https://h1d024099-responsi-kb-pakar.vercel.app/" class="btn btn-accent" target="_blank" rel="noopener">🔄 Coba Sistem Pakar →</a>
     </div>
 
 </div>
@@ -129,6 +141,13 @@
 </footer>
 
 <script>
+function toggleMenu() {
+    const nav = document.getElementById('header-nav');
+    const btn = document.getElementById('hamburger');
+    nav.classList.toggle('active');
+    btn.classList.toggle('open');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.skor-num-big').forEach(el => {
         if(el.dataset.color) el.style.color = el.dataset.color;
