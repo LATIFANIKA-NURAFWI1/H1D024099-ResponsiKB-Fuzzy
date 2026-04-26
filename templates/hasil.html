@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Rekomendasi Fuzzy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+
+<div class="container-wide" style="padding-top:36px;">
+
+    <!-- Rekomendasi Terbaik -->
+    {% if hasil %}
+    {% set top = hasil[0] %}
+    <div class="top-banner">
+        <div>
+            <h2>Rekomendasi Terbaik: {{ top.prodi.prodi }}</h2>
+            <p>{{ top.prodi.nama_univ }} ({{ top.prodi.univ }}) — Skor: <strong>{{ top.skor }}/100</strong> &nbsp;·&nbsp; {{ top.label }}</p>
+            <p style="opacity:0.85; font-size:0.82rem; margin-top:4px;">{{ top.prodi.deskripsi }}</p>
+        </div>
+        <nav class="header-nav" id="header-nav">
+            <a href="/" class="nav-link">← Ubah Input</a>
+        </nav>    
+    </div>
+    {% endif %}
+
+    <!-- PROFIL INPUT -->
+    <div class="card">
+        <div class="card-title"> Profil Input Kamu</div>
+        <div class="profil-row">
+            <div class="profil-item">
+                <div class="p-label">Rata-rata Rapor</div>
+                <div class="p-val">{{ input_data.nilai_rapor }}</div>
+            </div>
+            <div class="profil-item">
+                <div class="p-label">Penghasilan Orang Tua</div>
+                <div class="p-val">Rp {{ input_data.ekonomi }}jt/bln</div>
+            </div>
+            <div class="profil-item">
+                <div class="p-label">Kota Asal</div>
+                <div class="p-val">{{ input_data.kota_asal }}</div>
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <div class="p-label" style="margin-bottom:8px;">Rapor per Semester:</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                {% for i in range(5) %}
+                {% if input_data.sem_vals[i] > 0 %}
+                <span class="sem-chip">Sem {{ i+1 }}: <strong>{{ input_data.sem_vals[i] }}</strong></span>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <div class="p-label" style="margin-bottom:8px;">Bakat yang Dipilih:</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                {% for b in input_data.bakat_dipilih %}
+                <span class="tag-chip">{{ b.ikon }} {{ b.nama }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div style="margin-top:12px;">
+            <div class="p-label" style="margin-bottom:8px;">Minat yang Dipilih:</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                {% for m in input_data.minat_dipilih %}
+                <span class="tag-chip tag-minat">{{ m.ikon }} {{ m.nama }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RANKING LIST -->
+    <div class="card">
+        <div class="card-title"> Rekomendasi Prodi & Universitas</div>
+        <div class="ranking-list">
+            {% for item in hasil %}
+            <div class="rank-card rank-{{ loop.index }}">
+                <div class="rank-num">{{ loop.index }}</div>
+
+                <div class="rank-body">
+                    <div class="rank-meta">
+                        <div>
+                            <h3>{{ item.prodi.prodi }}</h3>
+                            <div class="rank-univ">🏛 {{ item.prodi.nama_univ }} ({{ item.prodi.univ }}) &nbsp;·&nbsp; 📍 {{ item.prodi.kota }} &nbsp;·&nbsp; 📏 {{ item.jarak_km }} km</div>
+                        </div>
+                        <div class="skor-block">
+                            <div class="skor-num-big" data-color="{{ item.warna }}">{{ item.skor }}</div>
+                            <div class="skor-sub">/100</div>
+                            <div class="skor-label" data-color="{{ item.warna }}">{{ item.label }}</div>
+                        </div>
+                    </div>
+
+                    <div class="prog-bg">
+                        <div class="prog-fill" data-width="{{ item.skor }}" data-color="{{ item.warna }}"></div>
+                    </div>
+
+                    <div class="rank-tags" style="margin:10px 0;">
+                        <span class="tag {% if item.prodi.jenis == 'SAINTEK' %}tag-blue{% else %}tag-purple{% endif %}">
+                            {{ item.prodi.jenis }}
+                        </span>
+                        <span class="tag tag-green">Prospek: {{ item.prodi.prospek }}/100</span>
+                        <span class="tag">UKT maks: Rp{{ "{:,.0f}".format(item.prodi.ukt_max) }}</span>
+                        <span class="tag">{{ item.prodi.mapel | join(', ') }}</span>
+                    </div>
+
+                    <div class="explain-box">
+                        <div class="explain-title">Analisis Kesesuaian:</div>
+                        <ul class="explain-list">
+                            {% for p in item.penjelasan %}<li>{{ p }}</li>{% endfor %}
+                        </ul>
+                        <p class="explain-desc">{{ item.prodi.deskripsi }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <a href="/" class="btn btn-outline">← Ubah Input</a>
+    </div>
+
+</div>
+
+<footer>
+    <strong>Sistem Fuzzy</strong> – Rekomendasi Prodi &amp; Universitas
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.skor-num-big').forEach(el => {
+        if(el.dataset.color) el.style.color = el.dataset.color;
+    });
+    document.querySelectorAll('.skor-label').forEach(el => {
+        if(el.dataset.color) {
+            el.style.backgroundColor = el.dataset.color + '20';
+            el.style.color = el.dataset.color;
+            el.style.border = '1px solid ' + el.dataset.color + '40';
+        }
+    });
+    document.querySelectorAll('.prog-fill').forEach(el => {
+        if(el.dataset.width) el.style.width = el.dataset.width + '%';
+        if(el.dataset.color) el.style.backgroundColor = el.dataset.color;
+    });
+});
+</script>
+</body>
+</html>

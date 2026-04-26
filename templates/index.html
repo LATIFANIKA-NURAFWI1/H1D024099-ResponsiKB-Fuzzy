@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Fuzzy Rekomendasi Prodi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<section class="page-hero">
+    <span class="hero-tag">Sistem Fuzzy</span>
+    <h1 class="hero-title">Rekomendasi Program Studi &amp;<br>Universitas Terbaik Untukmu</h1>
+</section>
+
+<div class="container" style="max-width:900px;">
+
+    <!-- Validasi -->
+    {% if errors %}
+    <div class="alert-error" id="error-box">
+        <strong>⚠️ Wajib Diisi:</strong>
+        <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    <div class="alert-error" id="client-error-box" style="display: none;">
+        <strong>⚠️ Harap lengkapi data berikut:</strong>
+        <ul id="client-error-list"></ul>
+    </div>
+
+    <form action="/hitung" method="POST" id="mainForm" onsubmit="return validateForm()">
+
+        <!-- BAKAT -->
+        <div class="card">
+            <div class="card-title">Bakat Kamu</div>
+            <p class="section-note">Centang bakat yang dmiliki. Satu orang bisa punya lebih dari satu bakat.</p>
+
+            <div class="bakat-table-wrap">
+                <table class="bakat-table">
+                    <thead>
+                        <tr>
+                            <th style="width:48px;">Pilih</th>
+                            <th>Jenis Bakat</th>
+                            <th>Deskripsi</th>
+                            <th>Profesi yang Cocok</th>
+                            <th>Prodi yang Relevan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bakat_list %}
+                        <tr class="bakat-row" id="row-bakat-{{ b.id }}">
+                            <td class="check-col">
+                                <label class="custom-check">
+                                    <input type="checkbox" name="bakat" value="{{ b.id }}"
+                                           onchange="highlightRow('row-bakat-{{ b.id }}', this.checked)">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </td>
+                            <td class="bakat-nama"><strong>{{ b.nama }}</strong></td>
+                            <td class="bakat-desc">{{ b.deskripsi }}</td>
+                            <td class="bakat-profesi">
+                                {% for p in b.contoh_profesi %}<span class="mini-tag">{{ p }}</span>{% endfor %}
+                            </td>
+                            <td class="bakat-prodi">
+                                {% for p in b.prodi_cocok %}<span class="mini-tag mini-blue">{{ p }}</span>{% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div id="bakat-count" class="sel-count">0 bakat dipilih</div>
+        </div>
+
+        <!-- MINAT -->
+        <div class="card">
+            <div class="card-title">Minat Kamu</div>
+            <p class="section-note">Pilih bidang yang diminati.</p>
+
+            <div class="minat-grid">
+                {% for m in minat_list %}
+                <label class="minat-card" id="minat-card-{{ m.id }}" onclick="toggleMinat('minat-card-{{ m.id }}', 'minat-cb-{{ m.id }}')">
+                    <input type="checkbox" name="minat" value="{{ m.id }}" id="minat-cb-{{ m.id }}" style="display:none;">
+                    <div class="minat-nama">{{ m.nama }}</div>
+                    <div class="minat-desc">{{ m.deskripsi }}</div>
+                </label>
+                {% endfor %}
+            </div>
+            <div id="minat-count" class="sel-count">0 minat dipilih</div>
+        </div>
+
+        <!-- NILAI AKADEMIK -->
+        <div class="card">
+            <div class="card-title">Nilai Rapor Semester 1–5</div>
+            <p class="section-note">Masukkan rata-rata nilai semua mata pelajaran per semester (0–100).</p>
+            <div class="sem-grid">
+                {% for i in range(1,6) %}
+                <div class="sem-item">
+                    <label>Sem {{ i }}</label>
+                    <input type="number" name="sem{{ i }}" min="0" max="100" step="0.01"
+                           placeholder="0–100" oninput="updateAvg()">
+                </div>
+                {% endfor %}
+            </div>
+            <div class="avg-box">Rata-rata rapor: <strong id="avg-display">—</strong></div>
+        </div>
+
+        <!-- EKONOMI & DOMISILI -->
+        <div class="card">
+            <div class="card-title">Kondisi Ekonomi &amp; Domisili</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Total Penghasilan Orang Tua (Juta Rp/bulan)
+                        <span class="label-hint">Digunakan untuk mencocokkan kemampuan bayar UKT</span>
+                    </label>
+                    <div class="ekonomi-wrap">
+                        <input type="number" name="ekonomi" id="ekonomi" min="0" max="100" step="0.5" value="5"
+                               oninput="updateEkonomiLabel()">
+                        <span class="ekonomi-label" id="eko-label">Menengah</span>
+                    </div>
+                    <div class="ekonomi-scale">
+                        <span>≤ 3 jt → Rendah</span>
+                        <span>3–10 jt → Menengah</span>
+                        <span>> 10 jt → Tinggi</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Kota / Kabupaten Asal
+                        <span class="label-hint">Untuk estimasi jarak ke kampus tujuan</span>
+                    </label>
+                    <select name="kota_asal">
+                        {% for k in kota_list %}
+                        <option value="{{ k }}" {% if k == 'Purbalingga' %}selected{% endif %}>{{ k }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div style="text-align:center; margin: 8px 0 40px;">
+            <button type="submit" class="btn btn-primary btn-lg">
+            Hitung Rekomendasi 
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<footer>
+    <strong>Sistem Fuzzy</strong> – Rekomendasi Prodi &amp; Universitas
+</footer>
+
+<script>
+function highlightRow(rowId, checked) {
+    const row = document.getElementById(rowId);
+    if (checked) row.classList.add('row-selected');
+    else row.classList.remove('row-selected');
+    updateBakatCount();
+}
+
+function updateBakatCount() {
+    const count = document.querySelectorAll('input[name="bakat"]:checked').length;
+    document.getElementById('bakat-count').textContent = count + ' bakat dipilih';
+    document.getElementById('bakat-count').style.color = count > 0 ? 'var(--accent-dark)' : 'var(--text-muted)';
+}
+
+function toggleMinat(cardId, cbId) {
+    const cb = document.getElementById(cbId);
+    const card = document.getElementById(cardId);
+    cb.checked = !cb.checked;
+    card.classList.toggle('minat-selected', cb.checked);
+    updateMinatCount();
+}
+
+function updateMinatCount() {
+    const count = document.querySelectorAll('input[name="minat"]:checked').length;
+    document.getElementById('minat-count').textContent = count + ' minat dipilih';
+    document.getElementById('minat-count').style.color = count > 0 ? 'var(--accent-dark)' : 'var(--text-muted)';
+}
+
+function updateAvg() {
+    let sum = 0, count = 0;
+    for (let i = 1; i <= 5; i++) {
+        const el = document.querySelector(`input[name="sem${i}"]`);
+        const v = parseFloat(el ? el.value : '');
+        if (!isNaN(v) && v > 0) { sum += v; count++; }
+    }
+    document.getElementById('avg-display').textContent = count > 0 ? (sum / count).toFixed(2) : '—';
+}
+
+function updateEkonomiLabel() {
+    const v = parseFloat(document.getElementById('ekonomi').value || 0);
+    const el = document.getElementById('eko-label');
+    if (v <= 3) { el.textContent = 'Rendah'; el.className = 'ekonomi-label eko-rendah'; }
+    else if (v <= 10) { el.textContent = 'Menengah'; el.className = 'ekonomi-label eko-menengah'; }
+    else { el.textContent = 'Tinggi'; el.className = 'ekonomi-label eko-tinggi'; }
+}
+updateEkonomiLabel();
+
+function validateForm() {
+    const errorList = document.getElementById('client-error-list');
+    const errorBox = document.getElementById('client-error-box');
+    errorList.innerHTML = ''; 
+    let errors = [];
+
+    if (document.querySelectorAll('input[name="bakat"]:checked').length === 0) {
+        errors.push('Pilih minimal satu <strong>bakat</strong> yang kamu miliki.');
+    }
+
+    if (document.querySelectorAll('input[name="minat"]:checked').length === 0) {
+        errors.push('Pilih minimal satu bidang <strong>minat</strong>.');
+    }
+
+    for (let i = 1; i <= 5; i++) {
+        const el = document.querySelector(`input[name="sem${i}"]`);
+        if (!el || el.value.trim() === '') {
+            errors.push(`Nilai <strong>Semester ${i}</strong> belum diisi.`);
+        } else {
+            const val = parseFloat(el.value);
+            if (isNaN(val) || val < 0 || val > 100) {
+                errors.push(`Nilai <strong>Semester ${i}</strong> harus antara 0 – 100.`);
+            }
+        }
+    }
+
+    const ekonomi = document.getElementById('ekonomi');
+    if (!ekonomi || ekonomi.value.trim() === '') {
+        errors.push('Isi <strong>total penghasilan orang tua</strong> (bisa 0).');
+    }
+
+    if (errors.length > 0) {
+        errors.forEach(msg => {
+            const li = document.createElement('li');
+            li.innerHTML = msg;
+            errorList.appendChild(li);
+        });
+        errorBox.style.display = 'block';
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false; 
+    }
+
+    errorBox.style.display = 'none';
+    return true; 
+}
+</script>
+</body>
+</html>
